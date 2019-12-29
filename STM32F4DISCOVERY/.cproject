@@ -91,7 +91,7 @@
                             							
                             <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.626693013" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
                             							
-                            <builder buildPath="${workspace_loc:/STM32F4DISCOVERY}/Debug" id="ilg.gnuarmeclipse.managedbuild.cross.builder.2113308800" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make ビルダー" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
+                            <builder arguments="-j" buildPath="${workspace_loc:/STM32F4DISCOVERY}/Debug" command="${cross_make}" id="ilg.gnuarmeclipse.managedbuild.cross.builder.2113308800" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make ビルダー" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
                             							
                             <tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.37141551" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
                                 								
