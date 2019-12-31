@@ -80,7 +80,7 @@ main(int argc, char* argv[])
   timer_start();
 
   blink_led_init();
-  
+
   uint32_t seconds = 0;
 
   // Infinite loop
@@ -94,7 +94,7 @@ main(int argc, char* argv[])
 
       ++seconds;
       // Count seconds on the trace device.
-      trace_printf("Second %u\n", seconds);
+      //trace_printf("Second %u\n", seconds); /* これを有効にするとデバッグ終了時にCPUがHaltしたままになるので通常は無効化 */
     }
   // Infinite loop, never return.
 }
