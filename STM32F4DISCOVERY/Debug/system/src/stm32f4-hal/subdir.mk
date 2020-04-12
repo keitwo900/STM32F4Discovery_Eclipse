@@ -23,11 +23,13 @@ C_SRCS += \
 ../system/src/stm32f4-hal/stm32f4xx_hal_dma_ex.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_dsi.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_eth.c \
+../system/src/stm32f4-hal/stm32f4xx_hal_exti.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_flash.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_flash_ex.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_flash_ramfunc.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_fmpi2c.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_fmpi2c_ex.c \
+../system/src/stm32f4-hal/stm32f4xx_hal_fmpsmbus.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_gpio.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_hash.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_hash_ex.c \
@@ -41,6 +43,7 @@ C_SRCS += \
 ../system/src/stm32f4-hal/stm32f4xx_hal_lptim.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_ltdc.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_ltdc_ex.c \
+../system/src/stm32f4-hal/stm32f4xx_hal_mmc.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_nand.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_nor.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_pccard.c \
@@ -59,19 +62,37 @@ C_SRCS += \
 ../system/src/stm32f4-hal/stm32f4xx_hal_sd.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_sdram.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_smartcard.c \
+../system/src/stm32f4-hal/stm32f4xx_hal_smbus.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_spdifrx.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_spi.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_sram.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_tim.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_tim_ex.c \
-../system/src/stm32f4-hal/stm32f4xx_hal_timebase_tim_template.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_uart.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_usart.c \
 ../system/src/stm32f4-hal/stm32f4xx_hal_wwdg.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_adc.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_crc.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_dac.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_dma.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_dma2d.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_exti.c \
 ../system/src/stm32f4-hal/stm32f4xx_ll_fmc.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_fmpi2c.c \
 ../system/src/stm32f4-hal/stm32f4xx_ll_fsmc.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_gpio.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_i2c.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_lptim.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_pwr.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_rcc.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_rng.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_rtc.c \
 ../system/src/stm32f4-hal/stm32f4xx_ll_sdmmc.c \
-../system/src/stm32f4-hal/stm32f4xx_ll_usb.c 
+../system/src/stm32f4-hal/stm32f4xx_ll_spi.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_tim.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_usart.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_usb.c \
+../system/src/stm32f4-hal/stm32f4xx_ll_utils.c 
 
 OBJS += \
 ./system/src/stm32f4-hal/stm32f4xx_hal.o \
@@ -93,11 +114,13 @@ OBJS += \
 ./system/src/stm32f4-hal/stm32f4xx_hal_dma_ex.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_dsi.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_eth.o \
+./system/src/stm32f4-hal/stm32f4xx_hal_exti.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_flash.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_flash_ex.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_flash_ramfunc.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_fmpi2c.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_fmpi2c_ex.o \
+./system/src/stm32f4-hal/stm32f4xx_hal_fmpsmbus.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_gpio.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_hash.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_hash_ex.o \
@@ -111,6 +134,7 @@ OBJS += \
 ./system/src/stm32f4-hal/stm32f4xx_hal_lptim.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_ltdc.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_ltdc_ex.o \
+./system/src/stm32f4-hal/stm32f4xx_hal_mmc.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_nand.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_nor.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_pccard.o \
@@ -129,19 +153,37 @@ OBJS += \
 ./system/src/stm32f4-hal/stm32f4xx_hal_sd.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_sdram.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_smartcard.o \
+./system/src/stm32f4-hal/stm32f4xx_hal_smbus.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_spdifrx.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_spi.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_sram.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_tim.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_tim_ex.o \
-./system/src/stm32f4-hal/stm32f4xx_hal_timebase_tim_template.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_uart.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_usart.o \
 ./system/src/stm32f4-hal/stm32f4xx_hal_wwdg.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_adc.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_crc.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_dac.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_dma.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_dma2d.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_exti.o \
 ./system/src/stm32f4-hal/stm32f4xx_ll_fmc.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_fmpi2c.o \
 ./system/src/stm32f4-hal/stm32f4xx_ll_fsmc.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_gpio.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_i2c.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_lptim.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_pwr.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_rcc.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_rng.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_rtc.o \
 ./system/src/stm32f4-hal/stm32f4xx_ll_sdmmc.o \
-./system/src/stm32f4-hal/stm32f4xx_ll_usb.o 
+./system/src/stm32f4-hal/stm32f4xx_ll_spi.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_tim.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_usart.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_usb.o \
+./system/src/stm32f4-hal/stm32f4xx_ll_utils.o 
 
 C_DEPS += \
 ./system/src/stm32f4-hal/stm32f4xx_hal.d \
@@ -163,11 +205,13 @@ C_DEPS += \
 ./system/src/stm32f4-hal/stm32f4xx_hal_dma_ex.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_dsi.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_eth.d \
+./system/src/stm32f4-hal/stm32f4xx_hal_exti.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_flash.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_flash_ex.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_flash_ramfunc.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_fmpi2c.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_fmpi2c_ex.d \
+./system/src/stm32f4-hal/stm32f4xx_hal_fmpsmbus.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_gpio.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_hash.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_hash_ex.d \
@@ -181,6 +225,7 @@ C_DEPS += \
 ./system/src/stm32f4-hal/stm32f4xx_hal_lptim.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_ltdc.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_ltdc_ex.d \
+./system/src/stm32f4-hal/stm32f4xx_hal_mmc.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_nand.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_nor.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_pccard.d \
@@ -199,19 +244,37 @@ C_DEPS += \
 ./system/src/stm32f4-hal/stm32f4xx_hal_sd.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_sdram.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_smartcard.d \
+./system/src/stm32f4-hal/stm32f4xx_hal_smbus.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_spdifrx.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_spi.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_sram.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_tim.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_tim_ex.d \
-./system/src/stm32f4-hal/stm32f4xx_hal_timebase_tim_template.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_uart.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_usart.d \
 ./system/src/stm32f4-hal/stm32f4xx_hal_wwdg.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_adc.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_crc.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_dac.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_dma.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_dma2d.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_exti.d \
 ./system/src/stm32f4-hal/stm32f4xx_ll_fmc.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_fmpi2c.d \
 ./system/src/stm32f4-hal/stm32f4xx_ll_fsmc.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_gpio.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_i2c.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_lptim.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_pwr.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_rcc.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_rng.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_rtc.d \
 ./system/src/stm32f4-hal/stm32f4xx_ll_sdmmc.d \
-./system/src/stm32f4-hal/stm32f4xx_ll_usb.d 
+./system/src/stm32f4-hal/stm32f4xx_ll_spi.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_tim.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_usart.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_usb.d \
+./system/src/stm32f4-hal/stm32f4xx_ll_utils.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

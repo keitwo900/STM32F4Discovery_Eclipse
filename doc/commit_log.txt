@@ -7,6 +7,89 @@ keitwo
 
 ■変更ファイル
 
+----------------------------------------------------------------------------------------------------
+keitwo 
+・STM32F4 Firmware Packageバージョン更新
+
+■主な変更点
+・HALのバージョン(STM32F4 Firmware Packageバージョン)を、STM32Cube FW_F4 V1.25.0にアップデートしました。
+
+■追加ファイル
+STM32F4DISCOVERY/system/include/cmsis/cmsis_compiler.h
+STM32F4DISCOVERY/system/include/cmsis/cmsis_version.h
+STM32F4DISCOVERY/system/include/cmsis/mpu_armv7.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/Legacy/stm32f4xx_hal_can_legacy.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_hal_exti.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_hal_fmpsmbus.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_hal_mmc.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_hal_smbus.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_adc.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_bus.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_cortex.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_crc.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_dac.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_dma.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_dma2d.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_exti.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_fmpi2c.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_gpio.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_i2c.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_iwdg.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_lptim.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_pwr.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_rcc.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_rng.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_rtc.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_spi.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_system.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_tim.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_usart.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_utils.h
+STM32F4DISCOVERY/system/include/stm32f4-hal/stm32f4xx_ll_wwdg.h
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_hal_exti.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_hal_fmpsmbus.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_hal_mmc.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_hal_smbus.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_adc.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_crc.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_dac.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_dma.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_dma2d.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_exti.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_fmpi2c.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_gpio.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_i2c.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_lptim.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_pwr.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_rcc.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_rng.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_rtc.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_spi.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_tim.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_usart.c
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_utils.c
+・CubeMx5.6.1(STM32F4 Firmware PackageバージョンはSTM32Cube FW_F4 V1.25.0)で
+　作成し、追加したファイルです。LLのソースコードも一通り追加しておきます。
+
+■削除ファイル
+・STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_hal_timebase_tim_template.c
+　stm32f4xx_hal_rcc.cのバージョンアップにより、
+　このファイルにある関数HAL_InitTick()が、stm32f4xx_hal.cのHAL_InitTick()をオーバーライドすると、
+　stm32f4xx_hal_rcc.cのHAL_RCC_ClockConfig()がコールされたときに
+　変数uwTickPrioに不正な値(16)が入った状態でNVIC割り込み優先度設定がコールされ、
+　assertでプログラムが不正終了するようになりました。
+　eclipseでは、フォルダにあるファイルはコンパイル対象になってしまうので削除します。
+
+■変更ファイル
+STM32F4DISCOVERY/Debug/system/src/stm32f4-hal/subdir.mk
+・stm32f4-halフォルダにソースコード追加に伴う自動変更
+
+STM32F4DISCOVERY/include/stm32f4xx_hal_conf.h
+～
+STM32F4DISCOVERY/system/src/stm32f4-hal/stm32f4xx_ll_usb.c
+・STM32Cube FW_F4 V1.25.0へのアップデートに伴う変更
+　多いので記載は省略します。(変更ファイルの履歴でご確認ください。)
+
 ---------------------------------------------------------------------------------------------------
 keitwo 不要ファイル削除
 
