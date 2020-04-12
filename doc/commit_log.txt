@@ -9,6 +9,28 @@ keitwo
 
 ----------------------------------------------------------------------------------------------------
 keitwo 
+・STM32F4のFPU有効化
+
+■主な変更点
+・STM32F4のFPU Hardwareを有効化する設定にしました。
+
+■変更ファイル
+STM32F4DISCOVERY/.cproject
+・FPU Hardwareを設定で有効化しました。
+　Ecplipseのプロジェクトを右クリックしてプロパティ→「C/C++ ビルド」をプルダウンして「設定」
+　→「Target Processor」を選択→「Float ABI」を「ライブラリー (soft)」から「FP Instructions (hard)」に変更
+
+STM32F4DISCOVERY/Debug/makefile
+STM32F4DISCOVERY/Debug/src/subdir.mk
+STM32F4DISCOVERY/Debug/system/src/cmsis/subdir.mk
+STM32F4DISCOVERY/Debug/system/src/cortexm/subdir.mk
+STM32F4DISCOVERY/Debug/system/src/diag/subdir.mk
+STM32F4DISCOVERY/Debug/system/src/newlib/subdir.mk
+STM32F4DISCOVERY/Debug/system/src/stm32f4-hal/subdir.mk
+・.cprojectでのFPU有効化に伴うMakefileのコマンドラインの自動変更
+
+----------------------------------------------------------------------------------------------------
+keitwo 
 ・STM32F4 Firmware Packageバージョン更新
 
 ■主な変更点
