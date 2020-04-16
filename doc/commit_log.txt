@@ -9,6 +9,32 @@ keitwo
 
 ----------------------------------------------------------------------------------------------------
 keitwo 
+・フォルダ名変更
+
+■主な変更点
+・STM32F4DISCOVERY/system/フォルダは、意味合いとしてはLibraryに近いので、
+　STM32F4DISCOVERY/lib/に解明しました。
+
+■変更ファイル
+・STM32F4DISCOVERY/system/からSTM32F4DISCOVERY/lib/に改名しました。
+
+README.md
+・フォルダ名改名に伴って、説明も変えました。
+
+STM32F4DISCOVERY/.cproject
+・フォルダ名改名に伴う変更
+　STM32F4DISCOVERY/lib/system/src/stm32f4-halフォルダ以下と、
+　STM32F4DISCOVERY/lib/src/newlib/_startup.c
+　は、ビルド環境が固有に設定されていたようですが、
+　プロジェクトのビルド環境に合わせるようにします。
+
+STM32F4DISCOVERY/Debug/makefile
+STM32F4DISCOVERY/Debug/sources.mk
+STM32F4DISCOVERY/Debug/src/subdir.mk
+・フォルダ名解明に伴う変更
+
+----------------------------------------------------------------------------------------------------
+keitwo 
 ・STM32F4のFPU有効化
 
 ■主な変更点

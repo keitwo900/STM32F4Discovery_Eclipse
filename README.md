@@ -80,6 +80,6 @@ C:\
 ## その他
 
 ### HALドライバ
-STMのHALドライバ(STM32F4DISCOVERY\system\include\stm32f4-hal以下、およびSTM32F4DISCOVERY\system\src\stm32f4-hal以下)は、
+STMのHALドライバ(STM32F4DISCOVERY\lib\include\stm32f4-hal以下、およびSTM32F4DISCOVERY\lib\src\stm32f4-hal以下)は、
 色々使えるように削除せずに残してありますが、Eclipseでは、フォルダ以下にあるソースファイルはすべてビルド対象になってしまいます。
 必要に応じて削除して下さい。また、ドライバはプロジェクト作成時点のバージョンですので、必要に応じてCubeMX等で作成してアップデートしてください。

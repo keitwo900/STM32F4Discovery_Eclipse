@@ -8,12 +8,12 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include system/src/stm32f4-hal/subdir.mk
--include system/src/newlib/subdir.mk
--include system/src/diag/subdir.mk
--include system/src/cortexm/subdir.mk
--include system/src/cmsis/subdir.mk
 -include src/subdir.mk
+-include lib/src/stm32f4-hal/subdir.mk
+-include lib/src/newlib/subdir.mk
+-include lib/src/diag/subdir.mk
+-include lib/src/cortexm/subdir.mk
+-include lib/src/cmsis/subdir.mk
 -include subdir.mk
 -include objects.mk
 
