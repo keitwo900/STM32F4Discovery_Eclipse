@@ -5,12 +5,17 @@ STM32F4DiscoveryをEclipseとOpenOCDで開発するプロジェクトです。�
 <b>Eclipseのあちらこちらを調べてビルド、デバッグができるように設定する手間をかけず、
 Eclipseと関連ツールを1度用意し終えたら、本リポジトリをPullして、そのままビルド、デバッグが可能状態になることを目的とします。</b></br>
 
-Mster Branchは、必要最低限のアプリケーション動作のままにしておきます。Main関数に到達したら、コンソールに"Hello ARM World!"と出力し、
+Master Branchは、必要最低限のアプリケーション動作のままにしておきます。Main関数に到達したら、コンソールに"Hello ARM World!"と出力し、
 以降はLED LD4が1秒周期、Duty75%で点滅するプログラムです。
 (これは、Eclipseのプロジェクト新規作成で、STM32F4xx C/C++ Projectを選択して作成すると自動生成されるサンプルプログラムを少し改造したものです。)
 STM32F4Discoveryで新たに何か開発したければ、Master Branchを起点にすればよいという算段です。
 
-STM32F4Discoveryを使ったさまざまなアプリケーションは、他ブランチで作成していこうと思っています。(思っているだけかもよ?)
+Master Branch以外は、特定の機能のサンプルプログラムです。
+以下のBranchがありますのでご参考ください。
+
+|ブランチ名|説明|
+|--|--|
+|[develop_cdc_dev](https://github.com/keitwo900/STM32F4Discovery_Eclipse/tree/develop_cdc_dev)|USB-CDCのサンプルプログラムです。|
 
 <b>このリポジトリをそのまま使用可能にするためには、Windows 10 64bit環境で、以下の手順で開発環境を整える必要があります。</b>
 
