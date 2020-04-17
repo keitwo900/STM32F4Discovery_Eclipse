@@ -191,6 +191,8 @@ static int8_t CDC_DeInit_FS(void)
   * @param  length: Number of data to be sent (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter" /* 引数lengthは一応残しておく */
 static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 {
   /* USER CODE BEGIN 5 */
@@ -266,7 +268,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   return (USBD_OK);
   /* USER CODE END 5 */
 }
-
+#pragma GCC diagnostic pop
 /**
   * @brief  Data received over USB OUT endpoint are sent over CDC interface
   *         through this function.
@@ -287,7 +289,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
 
-  int i;
+  uint32_t i;
   for(i = 0; i < *Len; i++)
   {
     rxRing[rxWi++] = Buf[i]; /* ユーザ定義バッファにデータ格納 */
