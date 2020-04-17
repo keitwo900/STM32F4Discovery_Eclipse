@@ -27,10 +27,14 @@ CPP_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+lib/STM32_USB_Device_Library/Class/CDC/Src \
+lib/STM32_USB_Device_Library/Core/Src \
 lib/src/cmsis \
 lib/src/cortexm \
 lib/src/diag \
 lib/src/newlib \
 lib/src/stm32f4-hal \
-src \
+src/module_driver \
+src/system \
+src/task \
 

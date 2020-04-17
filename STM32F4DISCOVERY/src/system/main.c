@@ -34,6 +34,8 @@
 #include "Timer.h"
 #include "BlinkLed.h"
 
+#include "Task_UsbCdc.h"
+
 // ----------------------------------------------------------------------------
 //
 // Standalone STM32F4 led blink sample (trace via DEBUG).
@@ -81,22 +83,38 @@ main(int argc, char* argv[])
 
   blink_led_init();
 
+  T_UsbCdc_Init();
+
   uint32_t seconds = 0;
 
   // Infinite loop
   while (1)
     {
       blink_led_on();
-      timer_sleep(seconds == 0 ? TIMER_FREQUENCY_HZ : BLINK_ON_TICKS);
+      timer_sleep(seconds == 0 ? TIMER_FREQUENCY_HZ/10 : BLINK_ON_TICKS/10);
 
       blink_led_off();
-      timer_sleep(BLINK_OFF_TICKS);
+      timer_sleep(BLINK_OFF_TICKS/10);
+
+      Task_UsbCdc();
 
       ++seconds;
       // Count seconds on the trace device.
       //trace_printf("Second %u\n", seconds); /* これを有効にするとデバッグ終了時にCPUがHaltしたままになるので通常は無効化 */
     }
   // Infinite loop, never return.
+}
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+
+  /* USER CODE END Error_Handler_Debug */
 }
 
 #pragma GCC diagnostic pop

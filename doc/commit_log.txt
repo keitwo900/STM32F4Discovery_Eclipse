@@ -9,6 +9,56 @@ keitwo
 
 ----------------------------------------------------------------------------------------------------
 keitwo 
+・USB-CDC(device)実装
+
+■主な変更点
+・USB-CDCのデバイスクラスを実装しました。
+　CubeMxで作製したソースコードをEclipseに持ってきました。
+・フォルダ階層を整理しました。
+
+■追加ファイル
+STM32F4DISCOVERY/include/module_driver/usb_device.h
+STM32F4DISCOVERY/include/module_driver/usbd_cdc_if.h
+STM32F4DISCOVERY/include/module_driver/usbd_conf.h
+STM32F4DISCOVERY/include/module_driver/usbd_desc.h
+STM32F4DISCOVERY/include/system/main.h
+STM32F4DISCOVERY/lib/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h
+STM32F4DISCOVERY/lib/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c
+STM32F4DISCOVERY/lib/STM32_USB_Device_Library/Core/Inc/usbd_conf_template.h
+STM32F4DISCOVERY/lib/STM32_USB_Device_Library/Core/Inc/usbd_core.h
+STM32F4DISCOVERY/lib/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h
+STM32F4DISCOVERY/lib/STM32_USB_Device_Library/Core/Inc/usbd_def.h
+STM32F4DISCOVERY/lib/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h
+STM32F4DISCOVERY/lib/STM32_USB_Device_Library/Core/Src/usbd_core.c
+STM32F4DISCOVERY/lib/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c
+STM32F4DISCOVERY/lib/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c
+STM32F4DISCOVERY/src/module_driver/usb_device.c
+STM32F4DISCOVERY/src/module_driver/usbd_cdc_if.c
+STM32F4DISCOVERY/src/module_driver/usbd_conf.c
+STM32F4DISCOVERY/src/module_driver/usbd_desc.c
+・USB-CDC関連のソースコードです。
+　main.hには、USB関連のピン定義が入っています。(余計なペリフェラルのピン定義も入っていますが)
+
+STM32F4DISCOVERY/include/task/Task_UsbCdc.h
+STM32F4DISCOVERY/src/task/Task_UsbCdc.c
+・USB-CDCを管理するタスクです。
+
+■変更ファイル
+STM32F4DISCOVERY/include/module_driver/BlinkLed.h
+STM32F4DISCOVERY/include/module_driver/Timer.h
+STM32F4DISCOVERY/include/system/stm32f4xx_hal_conf.h
+STM32F4DISCOVERY/src/module_driver/BlinkLed.c
+STM32F4DISCOVERY/src/module_driver/Timer.c
+STM32F4DISCOVERY/src/system/_initialize_hardware.c
+STM32F4DISCOVERY/src/system/_write.c
+STM32F4DISCOVERY/src/system/exception_handlers.c
+STM32F4DISCOVERY/src/system/main.c
+STM32F4DISCOVERY/src/system/stm32f4xx_hal_msp.c
+・フォルダを移動しました。
+　moduledriver, systemというフォルダを作成しました。
+
+----------------------------------------------------------------------------------------------------
+keitwo 
 ・フォルダ名変更
 
 ■主な変更点

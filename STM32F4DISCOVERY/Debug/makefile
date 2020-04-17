@@ -8,12 +8,16 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include src/subdir.mk
+-include src/task/subdir.mk
+-include src/system/subdir.mk
+-include src/module_driver/subdir.mk
 -include lib/src/stm32f4-hal/subdir.mk
 -include lib/src/newlib/subdir.mk
 -include lib/src/diag/subdir.mk
 -include lib/src/cortexm/subdir.mk
 -include lib/src/cmsis/subdir.mk
+-include lib/STM32_USB_Device_Library/Core/Src/subdir.mk
+-include lib/STM32_USB_Device_Library/Class/CDC/Src/subdir.mk
 -include subdir.mk
 -include objects.mk
 

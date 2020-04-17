@@ -14,5 +14,5 @@ replaceAllTabs=false
 saveAndAddLine=false
 saveAndConvert=false
 saveAndFixLineDelimiters=false
-saveAndTrim=true
+saveAndTrim=false
 useModulo4Tabs=false
