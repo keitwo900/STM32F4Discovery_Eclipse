@@ -5,11 +5,10 @@ STM32F4DiscoveryをEclipseとOpenOCDで開発するプロジェクトです。�
 <b>Eclipseのあちらこちらを調べてビルド、デバッグができるように設定する手間をかけず、
 Eclipseと関連ツールを1度用意し終えたら、本リポジトリをPullして、そのままビルド、デバッグが可能状態になることを目的とします。</b></br>
 
-develop_cdc_cdv Branchは、USB-CDCのデバイスクラスのサンプルコードです。
+develop_cdc_cdv Branchは、USB-CDCのデバイスクラスのサンプルアプリケーションコードです。
 USB-CDC初期化後、受信処理が回り続け、データを受信すると、そのデータをエコーバックします。
 USB-CDCのミドルウェア等は、CubeMxから作成したものです。
 
-STM32F4Discoveryを使ったさまざまなアプリケーションは、他ブランチで作成していこうと思っています。(思っているだけかもよ?)
 
 <b>このリポジトリをそのまま使用可能にするためには、Windows 10 64bit環境で、以下の手順で開発環境を整える必要があります。</b>
 
@@ -82,3 +81,8 @@ C:\
 STMのHALドライバ(STM32F4DISCOVERY\lib\include\stm32f4-hal以下、およびSTM32F4DISCOVERY\lib\src\stm32f4-hal以下)は、
 色々使えるように削除せずに残してありますが、Eclipseでは、フォルダ以下にあるソースファイルはすべてビルド対象になってしまいます。
 必要に応じて削除して下さい。また、ドライバはプロジェクト作成時点のバージョンですので、必要に応じてCubeMX等で作成してアップデートしてください。
+
+### Doxygen
+STM32F4DISCOVERY\Doxyfileを使うと、DoxygenでHTMLを作ってソースコードブラウジングができるようになります。環境をお持ちの方はお試しください。<br>
+<b>Dotを有効にしています。Graphviz等のDot言語の実行ファイルパス(C:\Program Files (x86)\Graphviz2.38\bin 等)をDOT_PATHに指定してください。インストールされていない場合は空欄にしてください。<br>
+ここを設定しないとdoxygenがエラーで止まります。</b>
