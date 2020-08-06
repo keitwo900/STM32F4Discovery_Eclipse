@@ -33,6 +33,7 @@
 
 #include "Timer.h"
 #include "BlinkLed.h"
+#include "drv_cs43l22.h"
 
 // ----------------------------------------------------------------------------
 //
@@ -78,6 +79,8 @@ main(int argc, char* argv[])
   trace_printf("System clock: %u Hz\n", SystemCoreClock);
 
   timer_start();
+
+  DRV_CS43L22_Init();
 
   blink_led_init();
 

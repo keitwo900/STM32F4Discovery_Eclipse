@@ -8,6 +8,42 @@ keitwo
 ■変更ファイル
 
 ----------------------------------------------------------------------------------------------------
+keitwo 
+・I2C/I2S開発ブランチ作成
+
+■主な変更点
+・I2C/I2Sドライバを開発し、オーディオコーデックから発音するブランチを作成しました。
+　まずは、I2Cのドライバを実装しました。CubeMxのHALは使用せず、LLで実装しました。
+　また、I2Cの処理は現在のところ、割り込みを使用しないブロッキング処理のみが実装されています。
+
+■追加ファイル
+STM32F4DISCOVERY/include/stm32_assert.h
+・Eclipseで自動生成されるファイルになかったので、CubeMxで作製して追加しました。
+
+STM32F4DISCOVERY/src/module_driver/drv_cs43l22.c
+STM32F4DISCOVERY/src/module_driver/drv_cs43l22.h
+・オーディオコーデックのドライバファイルです。
+　現時点ではI2Cの制御の未実装されています。今後I2Sも追加予定です。
+
+■変更ファイル
+STM32F4DISCOVERY/.cproject
+・プリプロセッサ定義(シンボル)に「USE_FULL_LL_DRIVER」を追加しました。
+・インクルードディレクトリに「src/module_driver」を追加しました。
+　自作のドライバはヘッダファイルもこのフォルダに入れます。
+・最適化を無しにしました。(「-Og」から「-O0」にしました。)
+
+STM32F4DISCOVERY/Debug/makefile
+STM32F4DISCOVERY/Debug/sources.mk
+STM32F4DISCOVERY/Debug/src/subdir.mk
+・ファイル追加による自動生成
+
+STM32F4DISCOVERY/lib/include/stm32f4-hal/stm32f4xx_ll_rtc.h
+・シンボル「USE_FULL_LL_DRIVER」を定義したら警告が出るので修正しました。(引数を使用せずにレジスタを指定している箇所を修正)
+
+STM32F4DISCOVERY/src/main.c
+・オーディオコーデックの初期化関数を追加しました。
+
+----------------------------------------------------------------------------------------------------
 2020/04/18 keitwo 
 ・Doxygen設定ファイル追加、外部クロック設定値修正
 

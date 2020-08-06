@@ -33,4 +33,5 @@ lib/src/diag \
 lib/src/newlib \
 lib/src/stm32f4-hal \
 src \
+src/module_driver \
 
