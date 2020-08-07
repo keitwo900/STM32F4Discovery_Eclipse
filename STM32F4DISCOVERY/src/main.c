@@ -68,6 +68,8 @@
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
 #pragma GCC diagnostic ignored "-Wreturn-type"
 
+static int16_t testWaveBuf[100];
+
 int
 main(int argc, char* argv[])
 {
@@ -80,7 +82,18 @@ main(int argc, char* argv[])
 
   timer_start();
 
-  DRV_CS43L22_Init();
+  
+  /* テストデータとしてとりあえず矩形波を合成 */
+  unsigned int i;
+  for(i = 0; i < sizeof(testWaveBuf)/sizeof(uint16_t)/2; i++)
+  {
+      testWaveBuf[i] = 0x7fff;
+  }
+  for(; i < sizeof(testWaveBuf)/sizeof(uint16_t); i++)
+  {
+      testWaveBuf[i] = -0x7fff;
+  }
+  DRV_CS43L22_Init(44100, testWaveBuf, sizeof(testWaveBuf)/sizeof(uint16_t)); /* system_stm32f4xx.c内で設定したサンプリング周波数に一致させること! */
 
   blink_led_init();
 

@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    drv_cs43l22.c
   * @author  keitwo
-  * @date    2020/08/06
+  * @date    2020/08/07
   * @brief   オーディオコーデック制御プログラム
   ******************************************************************************
   * @attention
@@ -79,17 +79,29 @@
 #define AUDIO_RESET_GPIO    GPIOD
 #define AUDIO_RESET_PIN     LL_GPIO_PIN_4
 
-
 #define AUDIO_I2C_GPIO  GPIOB
 #define AUDIO_SCL_PIN   LL_GPIO_PIN_6
 #define AUDIO_SDA_PIN   LL_GPIO_PIN_9
 #define AUDIO_I2C       I2C1
 
+#define AUDIO_I2S_GPIO1     GPIOC /* Master Clock, Bit Clock, Serial Data */
+#define AUDIO_I2S_GPIO2     GPIOA /* Word Clock */
+#define AUDIO_I2S_MCK_PIN   LL_GPIO_PIN_7 /* PC7 */
+#define AUDIO_I2S_BCK_PIN   LL_GPIO_PIN_10 /* PC10 */
+#define AUDIO_I2S_SD_PIN    LL_GPIO_PIN_12 /* PC12 */
+#define AUDIO_I2S_WCK_PIN   LL_GPIO_PIN_4 /* PA4 */
+#define AUDIO_I2S           SPI3
+
+#define AUDIO_I2S_DMA               DMA1
+#define AUDIO_I2S_DMA_STREAM        LL_DMA_STREAM_7
+#define AUDIO_I2S_DMA_CH            LL_DMA_CHANNEL_0
+#define DRV_CS43L22_I2sDmaHandler   DMA1_Stream7_IRQHandler
+
 #define CODEC_SLAVE_ADDRESS 0x94  /* b1001010r/w */
 #define I2C_READ_BIT 0x01 /* リードはLSBが1 */
 #define CODEC_MAP_INCR_BIT 0x80 /* 内部アドレスバイトのMSBに1を立てると、インクリメント書き込み、読み出しが可能になる */
 
-#define DEFAULT_VOLUME  70 /* 最初に設定するマスターボリューム */
+#define DEFAULT_VOLUME  -96 /* 最初に設定するマスターボリューム */
 
 /**
   * @}
@@ -181,35 +193,31 @@ static void DRV_CS43L22_InitI2c(void)
     LL_I2C_SetOwnAddress2(I2C1, 0);
     
     /* I2C1 割り込み初期化 */
-    NVIC_SetPriority(I2C1_EV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-    NVIC_EnableIRQ(I2C1_EV_IRQn);
-    NVIC_SetPriority(I2C1_ER_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-    NVIC_EnableIRQ(I2C1_ER_IRQn);
+    //NVIC_SetPriority(I2C1_EV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+    //NVIC_EnableIRQ(I2C1_EV_IRQn);
+    //NVIC_SetPriority(I2C1_ER_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+    //NVIC_EnableIRQ(I2C1_ER_IRQn);
 }
 
 
 /*******************************************************************************/
 /** @par    DRV_CS43L22_VolumeCtrl
-  * @param  なし
+  * @param  uint8_t vol_dB: オーディオコーデックに設定するマスターボリューム(dB値)
+  *                         範囲-102dB ~ 12dBで0.5dB刻みです。設定したい値を2倍して
+  *                         入力してください。
+  *                         例: -102dB -> -204, 12dB -> 24, 4.5dB -> 9
   * @retval なし
   * @brief  I2Cを使用してオーディオコーデックの音量を設定します。
   *         割り込みを使用しないで制御します。(ブロッキング処理)
   * @author keitwo
 ********************************************************************************/
-static void DRV_CS43L22_VolumeCtrl(uint8_t Volume)
+static void DRV_CS43L22_VolumeCtrl(int16_t vol_dB)
 {
-  if (Volume > 0xE6)
-  {
+    vol_dB = (vol_dB >= 0) ? vol_dB : 0x0100 + vol_dB; /* 負のdBの変換方法はオーディオコーデックのマニュアル参照 */
+    
     /* Set the Master volume */
-    DRV_CS43L22_WriteRegisterOneByte(0x20, Volume - 0xE7); 
-    DRV_CS43L22_WriteRegisterOneByte(0x21, Volume - 0xE7);     
-  }
-  else
-  {
-    /* Set the Master volume */
-    DRV_CS43L22_WriteRegisterOneByte(0x20, Volume + 0x19); 
-    DRV_CS43L22_WriteRegisterOneByte(0x21, Volume + 0x19); 
-  } 
+    DRV_CS43L22_WriteRegisterOneByte(0x20, (uint8_t)vol_dB); 
+    DRV_CS43L22_WriteRegisterOneByte(0x21, (uint8_t)vol_dB);
 }
 
 /*******************************************************************************/
@@ -227,8 +235,7 @@ static void DRV_CS43L22_InitCodec(void)
     DRV_CS43L22_WriteRegisterOneByte(0x05, 0x81); /* クロック設定: 自動検出 */
     DRV_CS43L22_WriteRegisterOneByte(0x06, 0x04); /* I2S規格: I2Sフィリップス標準*/
     
-    //ボリューム設定to do
-    DRV_CS43L22_VolumeCtrl(DEFAULT_VOLUME);
+    DRV_CS43L22_VolumeCtrl(DEFAULT_VOLUME); /* ボリューム初期値設定 */
     
     DRV_CS43L22_WriteRegisterOneByte(0x02, 0x9E); /* コーデックパワーオン */
     DRV_CS43L22_WriteRegisterOneByte(0x0A, 0x00); /* アナログソフトランプ無効化 */
@@ -237,6 +244,78 @@ static void DRV_CS43L22_InitCodec(void)
     DRV_CS43L22_WriteRegisterOneByte(0x1F, 0x0F); /* 低音域、高音域調整 */
     DRV_CS43L22_WriteRegisterOneByte(0x1A, 0x0A); /* PCMボリュームレベル調整 */
     DRV_CS43L22_WriteRegisterOneByte(0x1B, 0x0A); /* PCMボリュームレベル調整 */
+}
+
+/*******************************************************************************/
+/** @par    DRV_CS43L22_InitI2s
+  * @param  uint32_t SamplingFreq: サンプリング周波数
+  * @param  void* audioBuf: 楽音バッファの先頭ポインタ
+  * @param  int audioBufSampleSize: 楽音バッファのサンプル数
+  * @retval なし
+  * @brief  I2Sを設定してオーディオ信号経路を開通します。
+  *         DMAのサーキュラーモードを使用し、楽音バッファの前半、後半で
+  *         ダブルバッファを構成してソフトウェア信号処理をするシステムにします。
+  * @author keitwo
+********************************************************************************/
+static void DRV_CS43L22_InitI2s(uint32_t SamplingFreq, void* audioBuf, int audioBufSampleSize)
+{
+    LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+    LL_I2S_InitTypeDef I2S_InitStruct = {0};
+    LL_DMA_InitTypeDef DMA_InitStruct = {0};
+    
+    /* I2S GPIO初期化 */
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA | LL_AHB1_GRP1_PERIPH_GPIOC); /* GPIOA,C クロック有効化 */
+    GPIO_InitStruct.Pin = AUDIO_I2S_MCK_PIN | AUDIO_I2S_BCK_PIN | AUDIO_I2S_SD_PIN; /* PC7(MCK), PC10(BCK), PC12(SD) */
+    GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE; /* オルタネート(I2S)で使用 */
+    GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL; /* プッシュプル出力 */
+    GPIO_InitStruct.Pull = GPIO_NOPULL; /* プルアップ/プルダウンともしない */
+    GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH; /* シリアルインタフェースなので高速 */
+    GPIO_InitStruct.Alternate = LL_GPIO_AF_6; /* オルタネート機能6(I2C I2S3_MCK/I2S3_CK/I2S3_SD/I2S3_WS) */
+    LL_GPIO_Init(AUDIO_I2S_GPIO1, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = AUDIO_I2S_WCK_PIN; /* PA4(WCK) */
+    LL_GPIO_Init(AUDIO_I2S_GPIO2, &GPIO_InitStruct);
+    
+    /* I2Sペリフェラル初期化 */
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI3); /* I2Sペリフェラルへのクロック有効化 */
+    I2S_InitStruct.Mode = LL_I2S_MODE_MASTER_TX; /* マスター、送信で使用 */
+    I2S_InitStruct.Standard = LL_I2S_STANDARD_PHILIPS; /* I2SのモードはI2Sフィリップス標準 */
+    I2S_InitStruct.DataFormat = LL_I2S_DATAFORMAT_16B; /* 16bit */
+    I2S_InitStruct.MCLKOutput = LL_I2S_MCLK_OUTPUT_ENABLE; /* マスタークロックを出力する */
+    I2S_InitStruct.AudioFreq = SamplingFreq; /* サンプリング周波数 */
+    I2S_InitStruct.ClockPolarity = LL_I2S_POLARITY_LOW; /* クロック極性は定常状態(テータが出ていないとき)でLow */
+    LL_I2S_Init(AUDIO_I2S, &I2S_InitStruct);
+    
+    /* I2S DMA 初期化 */
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1); /* DMA1 クロック有効化 */
+    DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)(&(AUDIO_I2S->DR)); /* I2Sデータレジスタのアドレス */
+    DMA_InitStruct.MemoryOrM2MDstAddress = (uint32_t)audioBuf; /* オーディオバッファのアドレス */
+    DMA_InitStruct.Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH; /* 方向はメモリからペリフェラル(出力) */
+    DMA_InitStruct.Mode = LL_DMA_MODE_CIRCULAR; /* サーキュラーモード */
+    DMA_InitStruct.PeriphOrM2MSrcIncMode = LL_DMA_PERIPH_NOINCREMENT; /* ペリフェラルはレジスタなのでインクリメントなし */
+    DMA_InitStruct.MemoryOrM2MDstIncMode = LL_DMA_MEMORY_INCREMENT; /* メモリは楽音データを更新するのでインクリメント */
+    DMA_InitStruct.PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_HALFWORD; /* 16bit */
+    DMA_InitStruct.MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_HALFWORD; /* 16bit */
+    DMA_InitStruct.NbData = audioBufSampleSize; /* オーディオバッファのサンプルサイズ */
+    DMA_InitStruct.Channel = AUDIO_I2S_DMA_CH; /* Channel 0 (マニュアルより) */
+    DMA_InitStruct.Priority = LL_DMA_PRIORITY_HIGH; /* オーディオは途切れてはいけないので優先度高め */
+    DMA_InitStruct.FIFOMode = LL_DMA_FIFOMODE_DISABLE; /* FIFOは使わない */
+    // DMA_InitStruct.FIFOThreshold = LL_DMA_FIFOTHRESHOLD_1_2; /* FIFOは使わないので不要 */
+    DMA_InitStruct.MemBurst = LL_DMA_MBURST_SINGLE; /* バースト転送しない */
+    DMA_InitStruct.PeriphBurst = LL_DMA_PBURST_SINGLE; /* バースト転送しない */
+    LL_DMA_Init(AUDIO_I2S_DMA, AUDIO_I2S_DMA_STREAM, &DMA_InitStruct);
+    
+    /* I2S DMA 割り込み有効化 */
+    LL_DMA_EnableIT_HT(AUDIO_I2S_DMA, AUDIO_I2S_DMA_STREAM); /* DMA半分転送割り込み */
+    LL_DMA_EnableIT_TC(AUDIO_I2S_DMA, AUDIO_I2S_DMA_STREAM); /* DMA転送完了割り込み */
+    NVIC_SetPriority(DMA1_Stream7_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+    NVIC_EnableIRQ(DMA1_Stream7_IRQn);
+    
+    /* I2S DMA 有効化 */
+    LL_I2S_EnableDMAReq_TX(AUDIO_I2S); /* I2Sペリフェラル側での、DMA送信有効化 */
+    LL_DMA_EnableStream(AUDIO_I2S_DMA, AUDIO_I2S_DMA_STREAM);
+    
+    /* I2S有効化 */
+    LL_I2S_Enable(AUDIO_I2S);
 }
 
 /**
@@ -250,17 +329,20 @@ static void DRV_CS43L22_InitCodec(void)
 
 /*******************************************************************************/
 /** @par	DRV_CS43L22_Init
-  * @param  なし
+  * @param  uint32_t SamplingFreq: サンプリング周波数
+  * @param  void* audioBuf: 楽音バッファの先頭ポインタ
+  * @param  int audioBufSampleSize: 楽音バッファのサンプル数
   * @retval なし
   * @brief	CS43L22を初期化します。
   *         CS43L22につながるI2C、I2Sピンと、ペリフェラルも初期化します。
   * @author keitwo
 ********************************************************************************/
-void DRV_CS43L22_Init(void)
+void DRV_CS43L22_Init(uint32_t SamplingFreq, void* audioBuf, int audioBufSampleSize)
 {
     DRV_CS43L22_Reset();
     DRV_CS43L22_InitI2c();
     DRV_CS43L22_InitCodec();
+    DRV_CS43L22_InitI2s(SamplingFreq, audioBuf, audioBufSampleSize);
     
     
     //DRV_CS43L22_I2CTest();
@@ -583,6 +665,31 @@ int DRV_CS43L22_I2CTest(void)
     }
     
     return result;
+}
+
+/*******************************************************************************/
+/** @par    DRV_CS43L22_I2sDmaHandler
+  * @param  なし
+  * @retval なし
+  * @brief  I2S DMAの割り込みハンドラです。
+
+  * @author keitwo
+********************************************************************************/
+void DRV_CS43L22_I2sDmaHandler(void)
+{
+    /* 半分転送完了 */
+    if(LL_DMA_IsActiveFlag_HT7(AUDIO_I2S_DMA))
+    {
+        LL_DMA_ClearFlag_HT7(AUDIO_I2S_DMA);
+        /* ここに楽音合成処理を記載To Do */
+    }
+    
+    /* 転送完了 */
+    if(LL_DMA_IsActiveFlag_TC7(AUDIO_I2S_DMA))
+    {
+        LL_DMA_ClearFlag_TC7(AUDIO_I2S_DMA);
+        /* ここに楽音合成処理を記載To Do */
+    }
 }
 
 /**

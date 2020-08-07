@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    drv_cs43l22.h
   * @author  keitwo
-  * @date    2020/08/06
+  * @date    2020/08/07
   * @brief   オーディオコーデック制御プログラム
   ******************************************************************************
   * @attention
@@ -98,7 +98,7 @@
   * @{
   */
 
-extern void DRV_CS43L22_Init(void);
+extern void DRV_CS43L22_Init(uint32_t SamplingFreq, void* audioBuf, int audioBufSampleSize);
 extern uint8_t DRV_CS43L22_ReadRegisterOneByte(uint8_t internalAddr);
 extern void DRV_CS43L22_ReadRegisters(uint8_t internalAddr, uint8_t* data, int size);
 extern void DRV_CS43L22_WriteRegisterOneByte(uint8_t internalAddr, uint8_t data);
