@@ -8,6 +8,30 @@ Eclipseで組み込み開発するテスト環境リポジトリ
 ■変更ファイル
 
 ----------------------------------------------------------------------------------------------------
+・フォルダ、ファイル整理
+
+■主な変更点
+・ヘッダファイルは、やっぱりincludeフォルダの下に置くことにしました。
+・使用していないCPUの関連ファイルを削除しました。
+
+■削除ファイル
+STM32F4DISCOVERY/lib/include/cmsis/core_cm0.h
+STM32F4DISCOVERY/lib/include/cmsis/core_cm0plus.h
+STM32F4DISCOVERY/lib/include/cmsis/core_cm3.h
+STM32F4DISCOVERY/lib/include/cmsis/core_cm7.h
+・使用CPUはCortex-M4なので、これ以外のCPU用ファイルは削除しました。
+
+■変更ファイル
+STM32F4DISCOVERY/include/module_driver/drv_cs43l22.h
+・STM32F4DISCOVERY/src/module_driver/drv_cs43l22.h から移動しました。
+
+STM32F4DISCOVERY/.cproject
+・インクルードディレクトリを変更しました。
+
+STM32F4DISCOVERY/Debug/src/subdir.mk
+・drv_cs43l22.hのフォルダ移動に伴う自動変更
+
+----------------------------------------------------------------------------------------------------
 ・I2S実装
 
 ■主な変更点
