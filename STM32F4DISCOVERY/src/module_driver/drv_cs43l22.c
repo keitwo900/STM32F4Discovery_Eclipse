@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    drv_cs43l22.c
   * @author  keitwo
-  * @date    2020/08/07
+  * @date    2020/08/12
   * @brief   オーディオコーデック制御プログラム
   ******************************************************************************
   * @attention
@@ -44,6 +44,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+//standard libraries
+#include <stdbool.h>
+
 //peripheral drivers
 #include "stm32f407xx.h"
 #include "stm32f4xx_ll_bus.h"
@@ -76,6 +79,12 @@
 /** @defgroup drv_cs43l22_Private_Macros drv_cs43l22 Private Macros
   * @{
   */
+
+/* ----------------------------------------------------
+ハードウェア関連定義
+---------------------------------------------------- */
+
+/* I2C関連 */
 #define AUDIO_RESET_GPIO    GPIOD
 #define AUDIO_RESET_PIN     LL_GPIO_PIN_4
 
@@ -83,7 +92,13 @@
 #define AUDIO_SCL_PIN   LL_GPIO_PIN_6
 #define AUDIO_SDA_PIN   LL_GPIO_PIN_9
 #define AUDIO_I2C       I2C1
+#define DRV_CS43L22_I2cEventHandler I2C1_EV_IRQHandler
 
+#define CODEC_SLAVE_ADDRESS 0x94  /* b1001010r/w */
+#define I2C_READ_BIT 0x01 /* リードはLSBが1 */
+#define CODEC_MAP_INCR_BIT 0x80 /* 内部アドレスバイトのMSBに1を立てると、インクリメント書き込み、読み出しが可能になる */
+
+/* I2S関連 */
 #define AUDIO_I2S_GPIO1     GPIOC /* Master Clock, Bit Clock, Serial Data */
 #define AUDIO_I2S_GPIO2     GPIOA /* Word Clock */
 #define AUDIO_I2S_MCK_PIN   LL_GPIO_PIN_7 /* PC7 */
@@ -92,20 +107,43 @@
 #define AUDIO_I2S_WCK_PIN   LL_GPIO_PIN_4 /* PA4 */
 #define AUDIO_I2S           SPI3
 
+/* I2S DMA関連 */
 #define AUDIO_I2S_DMA               DMA1
 #define AUDIO_I2S_DMA_STREAM        LL_DMA_STREAM_7
 #define AUDIO_I2S_DMA_CH            LL_DMA_CHANNEL_0
 #define DRV_CS43L22_I2sDmaHandler   DMA1_Stream7_IRQHandler
 
-#define CODEC_SLAVE_ADDRESS 0x94  /* b1001010r/w */
-#define I2C_READ_BIT 0x01 /* リードはLSBが1 */
-#define CODEC_MAP_INCR_BIT 0x80 /* 内部アドレスバイトのMSBに1を立てると、インクリメント書き込み、読み出しが可能になる */
-
+/* ----------------------------------------------------
+ソフトウェア関連定義
+---------------------------------------------------- */
 #define DEFAULT_VOLUME  -96 /* 最初に設定するマスターボリューム */
+#define I2C_QUEUE_SIZE  16 /* I2C通信要求を貯められる最大サイズ。2のべき乗にすること! */
 
 /**
   * @}
   */ /* End drv_cs43l22 Private Macros */
+
+/* Private Constants -------------------------------------------------------*/
+
+/** @defgroup drv_cs43l22_Private_Types drv_cs43l22 Private Types
+  * @{
+  */
+
+/*! @struct DRV_CS43L22_CLASS
+    @brief  オーディオコーデックドライバクラス
+*/
+typedef struct
+{
+    I2C_TRANS_INFO_S i2cTransInfo[I2C_QUEUE_SIZE];
+    int i2cTransRi;
+    int i2cTransWi;
+    bool i2cMtx; /* I2Cが通信中か否か。通信中ならtrue */
+    int i2cTransCnt;
+} DRV_CS43L22_CLASS;
+
+/**
+  * @}
+  */ /* End drv_cs43l22 Private Types */
 
 /* Private Constants -------------------------------------------------------*/
 /** @defgroup drv_cs43l22_Private_Constants drv_cs43l22 Private Constants
@@ -120,6 +158,8 @@
 /** @defgroup drv_cs43l22_Private_Variables drv_cs43l22 Private Variables
   * @{
   */
+
+DRV_CS43L22_CLASS drvCs43l22;
 
 /**
   * @}
@@ -193,10 +233,10 @@ static void DRV_CS43L22_InitI2c(void)
     LL_I2C_SetOwnAddress2(I2C1, 0);
     
     /* I2C1 割り込み初期化 */
-    //NVIC_SetPriority(I2C1_EV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-    //NVIC_EnableIRQ(I2C1_EV_IRQn);
-    //NVIC_SetPriority(I2C1_ER_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-    //NVIC_EnableIRQ(I2C1_ER_IRQn);
+    NVIC_SetPriority(I2C1_EV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+    NVIC_EnableIRQ(I2C1_EV_IRQn);
+    NVIC_SetPriority(I2C1_ER_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+    NVIC_EnableIRQ(I2C1_ER_IRQn);
 }
 
 
@@ -216,8 +256,8 @@ static void DRV_CS43L22_VolumeCtrl(int16_t vol_dB)
     vol_dB = (vol_dB >= 0) ? vol_dB : 0x0100 + vol_dB; /* 負のdBの変換方法はオーディオコーデックのマニュアル参照 */
     
     /* Set the Master volume */
-    DRV_CS43L22_WriteRegisterOneByte(0x20, (uint8_t)vol_dB); 
-    DRV_CS43L22_WriteRegisterOneByte(0x21, (uint8_t)vol_dB);
+    DRV_CS43L22_WriteRegOneByteWithWait(0x20, (uint8_t)vol_dB); 
+    DRV_CS43L22_WriteRegOneByteWithWait(0x21, (uint8_t)vol_dB);
 }
 
 /*******************************************************************************/
@@ -230,20 +270,20 @@ static void DRV_CS43L22_VolumeCtrl(int16_t vol_dB)
 ********************************************************************************/
 static void DRV_CS43L22_InitCodec(void)
 {
-    DRV_CS43L22_WriteRegisterOneByte(0x02, 0x01); /* コーデックパワーオフ */
-    DRV_CS43L22_WriteRegisterOneByte(0x04, 0xAF); /* スピーカーオフ、ヘッドフォンON*/
-    DRV_CS43L22_WriteRegisterOneByte(0x05, 0x81); /* クロック設定: 自動検出 */
-    DRV_CS43L22_WriteRegisterOneByte(0x06, 0x04); /* I2S規格: I2Sフィリップス標準*/
+    DRV_CS43L22_WriteRegOneByteWithWait(0x02, 0x01); /* コーデックパワーオフ */
+    DRV_CS43L22_WriteRegOneByteWithWait(0x04, 0xAF); /* スピーカーオフ、ヘッドフォンON*/
+    DRV_CS43L22_WriteRegOneByteWithWait(0x05, 0x81); /* クロック設定: 自動検出 */
+    DRV_CS43L22_WriteRegOneByteWithWait(0x06, 0x04); /* I2S規格: I2Sフィリップス標準*/
     
     DRV_CS43L22_VolumeCtrl(DEFAULT_VOLUME); /* ボリューム初期値設定 */
     
-    DRV_CS43L22_WriteRegisterOneByte(0x02, 0x9E); /* コーデックパワーオン */
-    DRV_CS43L22_WriteRegisterOneByte(0x0A, 0x00); /* アナログソフトランプ無効化 */
-    DRV_CS43L22_WriteRegisterOneByte(0x0E, 0x04); /* デジタルソフトランプ無効化*/
-    DRV_CS43L22_WriteRegisterOneByte(0x27, 0x00); /* アタックレベルのリミッタ無効か */
-    DRV_CS43L22_WriteRegisterOneByte(0x1F, 0x0F); /* 低音域、高音域調整 */
-    DRV_CS43L22_WriteRegisterOneByte(0x1A, 0x0A); /* PCMボリュームレベル調整 */
-    DRV_CS43L22_WriteRegisterOneByte(0x1B, 0x0A); /* PCMボリュームレベル調整 */
+    DRV_CS43L22_WriteRegOneByteWithWait(0x02, 0x9E); /* コーデックパワーオン */
+    DRV_CS43L22_WriteRegOneByteWithWait(0x0A, 0x00); /* アナログソフトランプ無効化 */
+    DRV_CS43L22_WriteRegOneByteWithWait(0x0E, 0x04); /* デジタルソフトランプ無効化*/
+    DRV_CS43L22_WriteRegOneByteWithWait(0x27, 0x00); /* アタックレベルのリミッタ無効か */
+    DRV_CS43L22_WriteRegOneByteWithWait(0x1F, 0x0F); /* 低音域、高音域調整 */
+    DRV_CS43L22_WriteRegOneByteWithWait(0x1A, 0x0A); /* PCMボリュームレベル調整 */
+    DRV_CS43L22_WriteRegOneByteWithWait(0x1B, 0x0A); /* PCMボリュームレベル調整 */
 }
 
 /*******************************************************************************/
@@ -318,6 +358,21 @@ static void DRV_CS43L22_InitI2s(uint32_t SamplingFreq, void* audioBuf, int audio
     LL_I2S_Enable(AUDIO_I2S);
 }
 
+/*******************************************************************************/
+/** @par    DRV_CS43L22_I2cPostFunction
+  * @param  なし
+  * @retval なし
+  * @brief  I2C通信完了時にコールされる関数です。
+  *         本関数は割り込みハンドラからコールされます。
+  * @author keitwo
+********************************************************************************/
+static void DRV_CS43L22_I2cPostFunction(void)
+{
+    drvCs43l22.i2cMtx = false;
+    drvCs43l22.i2cTransRi++;
+    drvCs43l22.i2cTransRi &= I2C_QUEUE_SIZE - 1; /* リミッタ */
+}
+
 /**
   * @}
   */ /* End drv_cs43l22 Private Functions */
@@ -344,19 +399,24 @@ void DRV_CS43L22_Init(uint32_t SamplingFreq, void* audioBuf, int audioBufSampleS
     DRV_CS43L22_InitCodec();
     DRV_CS43L22_InitI2s(SamplingFreq, audioBuf, audioBufSampleSize);
     
-    
-    //DRV_CS43L22_I2CTest();
+#if 0
+    /* I2C関数テスト(テストするとオーディオコーデックの設定が変わるため、音が鳴らなくなります。) */
+    if(DRV_CS43L22_I2CTest())
+    {
+        while(1); /* テスト失敗 */
+    }
+#endif
 }
 
 /*******************************************************************************/
-/** @par    DRV_CS43L22_ReadRegisterOneByte
+/** @par    DRV_CS43L22_ReadRegOneByteWithWait
   * @param  uint8_t internalAddr: オーディオコーデック内部アドレス
   * @retval uint8_t: 読み出しデータ
   * @brief  I2Cでオーディオコーデックのレジスタからデータを1byte読み出します。
   *         割り込みを使用しないで制御します。(ブロッキング処理)
   * @author keitwo
 ********************************************************************************/
-uint8_t DRV_CS43L22_ReadRegisterOneByte(uint8_t internalAddr)
+uint8_t DRV_CS43L22_ReadRegOneByteWithWait(uint8_t internalAddr)
 {
     uint8_t result;
     
@@ -402,7 +462,7 @@ uint8_t DRV_CS43L22_ReadRegisterOneByte(uint8_t internalAddr)
     while(!LL_I2C_IsActiveFlag_RXNE(AUDIO_I2C)); /* データ受信待ち */
     result = LL_I2C_ReceiveData8(AUDIO_I2C); /* データ受信 */
     
-    while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。) */
+    //while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。) */
     
     LL_I2C_AcknowledgeNextData(AUDIO_I2C, LL_I2C_ACK); /* ACK送信に戻す。 */
         
@@ -410,7 +470,7 @@ uint8_t DRV_CS43L22_ReadRegisterOneByte(uint8_t internalAddr)
 }
 
 /*******************************************************************************/
-/** @par    DRV_CS43L22_ReadRegisters
+/** @par    DRV_CS43L22_ReadRegsWithWait
   * @param  uint8_t internalAddr: オーディオコーデック内部アドレス
   * @param  uint8_t* data: 読み出しデータを格納する配列の先頭ポインタ
   * @param  int size: データサイズ
@@ -419,7 +479,7 @@ uint8_t DRV_CS43L22_ReadRegisterOneByte(uint8_t internalAddr)
   *         割り込みを使用しないで制御します。(ブロッキング処理)
   * @author keitwo
 ********************************************************************************/
-void DRV_CS43L22_ReadRegisters(uint8_t internalAddr, uint8_t* data, int size)
+void DRV_CS43L22_ReadRegsWithWait(uint8_t internalAddr, uint8_t* data, int size)
 {
     int i;
     
@@ -467,7 +527,7 @@ void DRV_CS43L22_ReadRegisters(uint8_t internalAddr, uint8_t* data, int size)
         while(!LL_I2C_IsActiveFlag_RXNE(AUDIO_I2C)); /* データ受信待ち */
         *data = LL_I2C_ReceiveData8(AUDIO_I2C); /* データ受信 */
            
-        while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。)受信の場合はデータ転送後に確認! */
+        //while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。)受信の場合はデータ転送後に確認! */
             
         LL_I2C_AcknowledgeNextData(AUDIO_I2C, LL_I2C_ACK); /* ACK送信に戻す。*/
         
@@ -484,10 +544,9 @@ void DRV_CS43L22_ReadRegisters(uint8_t internalAddr, uint8_t* data, int size)
         LL_I2C_GenerateStopCondition(AUDIO_I2C); /* ストップコンディション発行 */
          
         *data++ = LL_I2C_ReceiveData8(AUDIO_I2C); /* byte 0格納 */
-        while(!LL_I2C_IsActiveFlag_RXNE(AUDIO_I2C)); /* データ受信待ち */
         *data = LL_I2C_ReceiveData8(AUDIO_I2C); /* byte 1格納 */
         
-        while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。)受信の場合はデータ転送後に確認! */
+        //while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。)受信の場合はデータ転送後に確認! */
         
         LL_I2C_AcknowledgeNextData(AUDIO_I2C, LL_I2C_ACK); /* ACK送信に戻す。*/
         LL_I2C_DisableBitPOS(AUDIO_I2C); /* POS をLowに戻す */
@@ -514,10 +573,9 @@ void DRV_CS43L22_ReadRegisters(uint8_t internalAddr, uint8_t* data, int size)
         LL_I2C_GenerateStopCondition(AUDIO_I2C); /* ストップコンディション発行 */
         
         *data++ = LL_I2C_ReceiveData8(AUDIO_I2C); /* byte (N-2)格納 */
-        while(!LL_I2C_IsActiveFlag_RXNE(AUDIO_I2C)); /* データ受信待ち */
         *data = LL_I2C_ReceiveData8(AUDIO_I2C); /* byte (N-1)格納 */
         
-        while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。)受信の場合はデータ転送後に確認! */
+        //while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。)受信の場合はデータ転送後に確認! */
         
         LL_I2C_AcknowledgeNextData(AUDIO_I2C, LL_I2C_ACK); /* ACK送信に戻す。*/
         
@@ -525,9 +583,8 @@ void DRV_CS43L22_ReadRegisters(uint8_t internalAddr, uint8_t* data, int size)
     }
 }
 
-
 /*******************************************************************************/
-/** @par    DRV_CS43L22_WriteRegisterOneByte
+/** @par    DRV_CS43L22_WriteRegOneByteWithWait
   * @param  uint8_t internalAddr: オーディオコーデック内部アドレス
   * @param  uint8_t data: 書き込みデータ
   * @retval なし
@@ -535,7 +592,7 @@ void DRV_CS43L22_ReadRegisters(uint8_t internalAddr, uint8_t* data, int size)
   *         割り込みを使用しないで制御します。(ブロッキング処理)
   * @author keitwo
 ********************************************************************************/
-void DRV_CS43L22_WriteRegisterOneByte(uint8_t internalAddr, uint8_t data)
+void DRV_CS43L22_WriteRegOneByteWithWait(uint8_t internalAddr, uint8_t data)
 {
     while(LL_I2C_IsActiveFlag_BUSY(AUDIO_I2C)); /* 前の転送完了待ち */
     
@@ -562,11 +619,11 @@ void DRV_CS43L22_WriteRegisterOneByte(uint8_t internalAddr, uint8_t data)
     while(!LL_I2C_IsActiveFlag_BTF(AUDIO_I2C)); /* データ送信完了待ち */
     
     LL_I2C_GenerateStopCondition(AUDIO_I2C); /* ストップコンディション発行 */
-    while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。) */
+    //while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。) */
 }
 
 /*******************************************************************************/
-/** @par    DRV_CS43L22_WriteRegisters
+/** @par    DRV_CS43L22_WriteRegsWithWait
   * @param  uint8_t internalAddr: オーディオコーデック内部アドレス
   * @param  uint8_t* data: データの先頭ポインタ
   * @param  int size: データサイズ
@@ -575,7 +632,7 @@ void DRV_CS43L22_WriteRegisterOneByte(uint8_t internalAddr, uint8_t data)
   *         割り込みを使用しないで制御します。(ブロッキング処理)
   * @author keitwo
 ********************************************************************************/
-void DRV_CS43L22_WriteRegisters(uint8_t internalAddr, uint8_t* data, int size)
+void DRV_CS43L22_WriteRegsWithWait(uint8_t internalAddr, uint8_t* data, int size)
 {
     int i;
     
@@ -613,7 +670,234 @@ void DRV_CS43L22_WriteRegisters(uint8_t internalAddr, uint8_t* data, int size)
     while(!LL_I2C_IsActiveFlag_BTF(AUDIO_I2C)); /* 最終データ送信完了待ち */
     
     LL_I2C_GenerateStopCondition(AUDIO_I2C); /* ストップコンディション発行 */
-    while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。) */
+    //while(AUDIO_I2C->CR1 & I2C_CR1_STOP); /* ストップコンディション発行完了待ち(CR1であることに注意! SR1のSTOPビットは意味が違う。) */
+}
+
+/*******************************************************************************/
+/** @par    DRV_CS43L22_RequestI2c
+  * @param  I2C_TRANS_INFO_S i2cTransInfo: I2C通信情報
+  * @retval なし
+  * @brief  I2C通信を要求します。
+  *         本関数がコールされ終わっても、通信は開始されません。
+  * @author keitwo
+********************************************************************************/
+void DRV_CS43L22_RequestI2c(I2C_TRANS_INFO_S i2cTransInfo)
+{
+    if(i2cTransInfo.bufSize <= 0) return;
+    
+    drvCs43l22.i2cTransInfo[drvCs43l22.i2cTransWi] = i2cTransInfo; /* I2C通信情報を積む */
+
+    drvCs43l22.i2cTransWi++;
+    drvCs43l22.i2cTransWi &= I2C_QUEUE_SIZE - 1; /* リミッタ */
+}
+
+/*******************************************************************************/
+/** @par    DRV_CS43L22_ExecuteI2cPeriodic
+  * @param  なし
+  * @retval なし
+  * @brief  I2C通信要求があった場合、通信を実行します。
+  *         本関数は周期的にコールしてください。
+  * @author keitwo
+********************************************************************************/
+void DRV_CS43L22_ExecuteI2cPeriodic(void)
+{
+    if(drvCs43l22.i2cMtx) return;  /* I2C通信が空いていなかったらここで抜ける */
+    
+    if(drvCs43l22.i2cTransWi == drvCs43l22.i2cTransRi) return; /* 要求がない場合は何もしない */
+    
+    drvCs43l22.i2cMtx = true;
+    
+    while(LL_I2C_IsActiveFlag_BUSY(AUDIO_I2C)); /* 前の転送完了待ち(一応) */
+    
+    LL_I2C_GenerateStartCondition(AUDIO_I2C); /* スタートコンディション発行 */
+    
+    LL_I2C_EnableIT_TX(AUDIO_I2C);/* I2C割り込み許可(EVT, BUF) */
+}
+
+/*******************************************************************************/
+/** @par    DRV_CS43L22_I2cEventHandler
+  * @param  なし
+  * @retval なし
+  * @brief  I2Cイベントの割り込みハンドラです。
+
+  * @author keitwo
+********************************************************************************/
+void DRV_CS43L22_I2cEventHandler(void)
+{
+    I2C_TRANS_INFO_S* i2cXferInfo = &drvCs43l22.i2cTransInfo[drvCs43l22.i2cTransRi];
+    
+    /* スタートコンディション発行完了 */
+    if(LL_I2C_IsActiveFlag_SB(AUDIO_I2C) 
+     &&LL_I2C_IsActiveFlag_BUSY(AUDIO_I2C)
+     &&LL_I2C_IsActiveFlag_MSL(AUDIO_I2C)
+     && (i2cXferInfo->dir == I2C_DIR_TX || i2cXferInfo->dir == I2C_DIR_RX_WITH_ADDR_SELECT))
+    {
+        LL_I2C_TransmitData8(AUDIO_I2C, CODEC_SLAVE_ADDRESS); /* スレーブアドレス送信 */
+        return;
+    }
+    
+    /* スレーブアドレス送信完了 */
+    if(LL_I2C_IsActiveFlag_ADDR(AUDIO_I2C) 
+    && LL_I2C_IsActiveFlag_TXE(AUDIO_I2C)
+    && LL_I2C_IsActiveFlag_BUSY(AUDIO_I2C)
+    && LL_I2C_IsActiveFlag_MSL(AUDIO_I2C)
+    && LL_I2C_GetTransferDirection(AUDIO_I2C)
+    && (i2cXferInfo->dir == I2C_DIR_TX || i2cXferInfo->dir == I2C_DIR_RX_WITH_ADDR_SELECT))
+    {
+        LL_I2C_TransmitData8(AUDIO_I2C, i2cXferInfo->internalAddress | CODEC_MAP_INCR_BIT); /* オーディオコーデック内部アドレス送信(連続読み出しBit On) */
+        drvCs43l22.i2cTransCnt = i2cXferInfo->bufSize;
+        return;
+    }
+    
+    if(i2cXferInfo->dir == I2C_DIR_TX) /* 送信*/
+    {
+        /* データ送信 */
+        if(LL_I2C_IsActiveFlag_TXE(AUDIO_I2C)
+        && LL_I2C_IsActiveFlag_BUSY(AUDIO_I2C)
+        && LL_I2C_IsActiveFlag_MSL(AUDIO_I2C)
+        && LL_I2C_GetTransferDirection(AUDIO_I2C)
+        && drvCs43l22.i2cTransCnt != 0)
+        {
+            LL_I2C_TransmitData8(AUDIO_I2C, *i2cXferInfo->pBuf++);
+            drvCs43l22.i2cTransCnt--;
+            return;
+        }
+        
+        /* 最終データ送信完了 */
+        if(LL_I2C_IsActiveFlag_BTF(AUDIO_I2C))
+        {
+            LL_I2C_GenerateStopCondition(AUDIO_I2C); /* ストップコンディション発行 */
+            LL_I2C_DisableIT_TX(AUDIO_I2C); /* TX割り込みOFF */
+            if(i2cXferInfo->i2cCompFunc != NULL) i2cXferInfo->i2cCompFunc();
+            DRV_CS43L22_I2cPostFunction();
+        }
+    }
+    else /* 受信 */
+    {
+        i2cXferInfo->dir = I2C_DIR_RX; /* ここから受信に切り替え */
+        /* オーディオコーデック内部アドレス送信完了 */
+        if(LL_I2C_IsActiveFlag_TXE(AUDIO_I2C)
+        && LL_I2C_IsActiveFlag_BUSY(AUDIO_I2C)
+        && LL_I2C_IsActiveFlag_MSL(AUDIO_I2C)
+        && LL_I2C_GetTransferDirection(AUDIO_I2C) )
+        {
+            LL_I2C_GenerateStartCondition(AUDIO_I2C); /* リスタートコンディション発行 */
+            return;
+        }
+        
+        /* リスタートコンディション発行完了 */
+        if(LL_I2C_IsActiveFlag_SB(AUDIO_I2C)
+        && LL_I2C_IsActiveFlag_BUSY(AUDIO_I2C)
+        && LL_I2C_IsActiveFlag_MSL(AUDIO_I2C))
+        {
+            LL_I2C_TransmitData8(AUDIO_I2C, CODEC_SLAVE_ADDRESS | I2C_READ_BIT); /* スレーブアドレス送信(受信) */
+            return;
+        }
+        
+        /* スレーブアドレス送信完了(受信) */
+        if(LL_I2C_IsActiveFlag_ADDR(AUDIO_I2C)
+        && LL_I2C_IsActiveFlag_BUSY(AUDIO_I2C)
+        && LL_I2C_IsActiveFlag_MSL(AUDIO_I2C))
+        {
+            switch(i2cXferInfo->bufSize)
+            {
+            case 1:
+                LL_I2C_AcknowledgeNextData(AUDIO_I2C, LL_I2C_NACK); /* NACK送信に切り替え(1byte受信の時は、ADDRフラグを落とす前!) */  
+                (void)AUDIO_I2C->SR2; /* SR1に続いてSR2を読みだすと、ADDRがクリアされる。ADDRがクリアされることによって、受信が開始される。*/
+                LL_I2C_GenerateStopCondition(AUDIO_I2C); /* ストップコンディション発行 */
+                break;
+            case 2:
+                LL_I2C_AcknowledgeNextData(AUDIO_I2C, LL_I2C_NACK); /* NACK送信に切り替え */
+                LL_I2C_EnableBitPOS(AUDIO_I2C); /* POS をHighに切り替え(現在のシフトレジスタのデータの次のバイトに対しACK bitの内容を適用する) */
+                (void)AUDIO_I2C->SR2; /* SR1に続いてSR2を読みだすと、ADDRがクリアされる。ADDRがクリアされることによって、受信が開始される。*/
+                break;
+            default:
+                (void)AUDIO_I2C->SR2; /* SR1に続いてSR2を読みだすと、ADDRがクリアされる。ADDRがクリアされることによって、受信が開始される。 */
+                break;
+            }
+            return;
+        }
+        
+        /* 通信完了(RXNE判定より前!) */
+        if(LL_I2C_IsActiveFlag_BTF(AUDIO_I2C))
+        {
+            switch(i2cXferInfo->bufSize)
+            {
+            case 1:
+                break;
+            case 2:
+                LL_I2C_GenerateStopCondition(AUDIO_I2C); /* ストップコンディション発行 */
+                *i2cXferInfo->pBuf++ = LL_I2C_ReceiveData8(AUDIO_I2C); /* byte 0格納 */
+                *i2cXferInfo->pBuf++ = LL_I2C_ReceiveData8(AUDIO_I2C); /* byte 1格納 */
+                LL_I2C_AcknowledgeNextData(AUDIO_I2C, LL_I2C_ACK); /* ACK送信に戻す。*/
+                LL_I2C_DisableBitPOS(AUDIO_I2C); /* POS をLowに戻す */
+                LL_I2C_DisableIT_RX(AUDIO_I2C); /* RX割り込みOFF */
+                if(i2cXferInfo->i2cCompFunc != NULL) i2cXferInfo->i2cCompFunc();
+                DRV_CS43L22_I2cPostFunction();
+                break;
+
+            default:
+                if(drvCs43l22.i2cTransCnt == 3)
+                {
+                    LL_I2C_AcknowledgeNextData(AUDIO_I2C, LL_I2C_NACK); /* NACK送信に切り替え */
+                    *i2cXferInfo->pBuf++ = LL_I2C_ReceiveData8(AUDIO_I2C); /* byte(N-3)格納 */
+                    drvCs43l22.i2cTransCnt--;
+                }
+                else if(drvCs43l22.i2cTransCnt == 2)
+                {
+                    LL_I2C_GenerateStopCondition(AUDIO_I2C); /* ストップコンディション発行 */
+                    *i2cXferInfo->pBuf++ = LL_I2C_ReceiveData8(AUDIO_I2C); /* byte(N-2)格納 */
+                    *i2cXferInfo->pBuf++ = LL_I2C_ReceiveData8(AUDIO_I2C); /* byte(N-1)格納 */
+                    LL_I2C_DisableIT_RX(AUDIO_I2C); /* RX割り込みOFF */
+                    LL_I2C_AcknowledgeNextData(AUDIO_I2C, LL_I2C_ACK); /* ACK送信に戻す。*/
+                    if(i2cXferInfo->i2cCompFunc != NULL) i2cXferInfo->i2cCompFunc();
+                    DRV_CS43L22_I2cPostFunction();
+                }
+                break;
+            }
+            return;
+        }
+        
+        /* データ受信 */
+        if(LL_I2C_IsActiveFlag_RXNE(AUDIO_I2C))
+        {
+            switch(i2cXferInfo->bufSize)
+            {
+            case 1:
+                *i2cXferInfo->pBuf = LL_I2C_ReceiveData8(AUDIO_I2C); /* データ格納 */
+                LL_I2C_AcknowledgeNextData(AUDIO_I2C, LL_I2C_ACK); /* ACK送信に戻す。*/
+                LL_I2C_DisableIT_RX(AUDIO_I2C); /* RX割り込みOFF */
+                if(i2cXferInfo->i2cCompFunc != NULL) i2cXferInfo->i2cCompFunc();
+                DRV_CS43L22_I2cPostFunction();
+                break;
+
+            case 2:
+                break;
+
+            default:
+                if(drvCs43l22.i2cTransCnt > 3)
+                {
+                    *i2cXferInfo->pBuf++ = LL_I2C_ReceiveData8(AUDIO_I2C); /* データ格納 */
+                    drvCs43l22.i2cTransCnt--;
+                }
+                break;
+            }
+            return;
+        }
+    }
+}
+
+/*******************************************************************************/
+/** @par    DRV_CS43L22_I2CTestCallback
+  * @param  なし
+  * @retval なし
+  * @brief  I2C読み書き関数のコールバックテスト関数です。
+  * @author keitwo
+********************************************************************************/
+static bool testI2cComp; /*<! テスト関数内で割り込み処理を全て待つための変数 */
+void DRV_CS43L22_I2CTestCallback(void)
+{
+    testI2cComp = true;
 }
 
 /*******************************************************************************/
@@ -621,41 +905,45 @@ void DRV_CS43L22_WriteRegisters(uint8_t internalAddr, uint8_t* data, int size)
   * @param  なし
   * @retval int: テスト成功なら0, 失敗なら!0が返る
   * @brief  I2C読み書き関数のテスト関数です。
-  *         ★オーディオコーデックのリセットを解除後にテストしてください。
+  *         ★オーディオコーデックのリセット解除およびI2Cペリフェラル初期化後にテストしてください。
   * @author keitwo
 ********************************************************************************/
+static uint8_t readTest[4];
+static uint8_t writeTest[4];
 int DRV_CS43L22_I2CTest(void)
 {
     int result = 0;
     int i;
     uint8_t codecReg;
-    uint8_t readTest[4];
-    uint8_t writeTest[4];
+    I2C_TRANS_INFO_S i2cTranInfo;
+    
+    /* --------------------------------
+     ブロッキングI2C通信テスト 
+    --------------------------------- */
     
     /* 1byte読み書きテスト */
-    codecReg = DRV_CS43L22_ReadRegisterOneByte(0x02);
-    DRV_CS43L22_WriteRegisterOneByte(0x02, 0x9E);
-    codecReg = DRV_CS43L22_ReadRegisterOneByte(0x02);
+    DRV_CS43L22_WriteRegOneByteWithWait(0x02, 0x9E);
+    codecReg = DRV_CS43L22_ReadRegOneByteWithWait(0x02);
 
+    /* 送受信データ比較 */
     if(codecReg != 0x9E)
     {
         result = !0;
     }
     
-    /* 連続読み出しテスト(1byte, 2byte, 3byte) */
-    DRV_CS43L22_ReadRegisters(0x01, readTest, 1);
-    DRV_CS43L22_ReadRegisters(0x03, readTest, 2);
-    DRV_CS43L22_ReadRegisters(0x01, readTest, 3);
-    
     /* 連続読み書きテスト */
-    DRV_CS43L22_ReadRegisters(0x20, readTest, 4);
     writeTest[0] = 0xCC;
     writeTest[1] = 0xDD;
     writeTest[2] = 0xEE;
     writeTest[3] = 0xFF;
-    DRV_CS43L22_WriteRegisters(0x20, writeTest, 4);
-    DRV_CS43L22_ReadRegisters(0x20, readTest, 4);
+    DRV_CS43L22_WriteRegsWithWait(0x20, writeTest, 4);
+    readTest[0] = 0x00;
+    readTest[1] = 0x00;
+    readTest[2] = 0x00;
+    readTest[3] = 0x00;
+    DRV_CS43L22_ReadRegsWithWait(0x20, readTest, 4);
     
+    /* 送受信データ比較 */
     for(i = 0; i < 4; i++)
     {
         if(writeTest[i] != readTest[i])
@@ -664,6 +952,96 @@ int DRV_CS43L22_I2CTest(void)
         }
     }
     
+    /* --------------------------------
+     ノンブロッキングI2C通信テスト 
+    --------------------------------- */
+
+    /* 送信テスト */
+    writeTest[0] = 0x55;
+    writeTest[1] = 0x66;
+    writeTest[2] = 0x77;
+    writeTest[3] = 0x88;
+    i2cTranInfo.bufSize = 4;
+    i2cTranInfo.dir = I2C_DIR_TX;
+    i2cTranInfo.i2cCompFunc = DRV_CS43L22_I2CTestCallback;
+    i2cTranInfo.internalAddress = 0x20;
+    i2cTranInfo.pBuf = &writeTest[0];
+    i2cTranInfo.slaveAddress = CODEC_SLAVE_ADDRESS;
+    testI2cComp = false;
+    DRV_CS43L22_RequestI2c(i2cTranInfo);
+    DRV_CS43L22_ExecuteI2cPeriodic(); /* テストのためここで即時実行 */
+    while(!testI2cComp); /* コールバック完了待ち */
+
+    /* 受信テスト(1バイト) */
+    readTest[0] = 0x00;
+    i2cTranInfo.bufSize = 1;
+    i2cTranInfo.dir = I2C_DIR_RX_WITH_ADDR_SELECT;
+    i2cTranInfo.i2cCompFunc = DRV_CS43L22_I2CTestCallback;
+    i2cTranInfo.internalAddress = 0x20;
+    i2cTranInfo.pBuf = &readTest[0];
+    i2cTranInfo.slaveAddress = CODEC_SLAVE_ADDRESS;
+    testI2cComp = false;
+    DRV_CS43L22_RequestI2c(i2cTranInfo);
+    DRV_CS43L22_ExecuteI2cPeriodic(); /* テストのためここで即時実行 */
+    while(!testI2cComp); /* コールバック完了待ち */
+   
+    /* 送受信データ比較 */
+    for(i = 0; i < 1; i++)
+    {
+        if(writeTest[i] != readTest[i])
+        {
+            result = !0;
+        }
+    }
+    
+    /* 受信テスト(2バイト) */
+    readTest[0] = 0x00;
+    readTest[1] = 0x00;
+    i2cTranInfo.bufSize = 2;
+    i2cTranInfo.dir = I2C_DIR_RX_WITH_ADDR_SELECT;
+    i2cTranInfo.i2cCompFunc = DRV_CS43L22_I2CTestCallback;
+    i2cTranInfo.internalAddress = 0x20;
+    i2cTranInfo.pBuf = &readTest[0];
+    i2cTranInfo.slaveAddress = CODEC_SLAVE_ADDRESS;
+    testI2cComp = false;
+    DRV_CS43L22_RequestI2c(i2cTranInfo);
+    DRV_CS43L22_ExecuteI2cPeriodic(); /* テストのためここで即時実行 */
+    while(!testI2cComp); /* コールバック完了待ち */
+    
+    /* 送受信データ比較 */
+    for(i = 0; i < 2; i++)
+    {
+        if(writeTest[i] != readTest[i])
+        {
+            result = !0;
+        }
+    }
+
+    /* 受信テスト(3バイト以上) */
+    readTest[0] = 0x00;
+    readTest[1] = 0x00;
+    readTest[2] = 0x00;
+    readTest[3] = 0x00;
+    i2cTranInfo.bufSize = 4;
+    i2cTranInfo.dir = I2C_DIR_RX_WITH_ADDR_SELECT;
+    i2cTranInfo.i2cCompFunc = DRV_CS43L22_I2CTestCallback;
+    i2cTranInfo.internalAddress = 0x20;
+    i2cTranInfo.pBuf = &readTest[0];
+    i2cTranInfo.slaveAddress = CODEC_SLAVE_ADDRESS;
+    testI2cComp = false;
+    DRV_CS43L22_RequestI2c(i2cTranInfo);
+    DRV_CS43L22_ExecuteI2cPeriodic(); /* テストのためここで即時実行 */
+    while(!testI2cComp); /* コールバック完了待ち */
+
+    /* 送受信データ比較 */
+    for(i = 0; i < 4; i++)
+    {
+        if(writeTest[i] != readTest[i])
+        {
+            result = !0;
+        }
+    }
+
     return result;
 }
 

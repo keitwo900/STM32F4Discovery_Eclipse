@@ -73,46 +73,49 @@ static int16_t testWaveBuf[100];
 int
 main(int argc, char* argv[])
 {
-  // Send a greeting to the trace device (skipped on Release).
-  trace_puts("Hello ARM World!");
-
-  // At this stage the system clock should have already been configured
-  // at high speed.
-  trace_printf("System clock: %u Hz\n", SystemCoreClock);
-
-  timer_start();
-
-  
-  /* テストデータとしてとりあえず矩形波を合成 */
-  unsigned int i;
-  for(i = 0; i < sizeof(testWaveBuf)/sizeof(uint16_t)/2; i++)
-  {
-      testWaveBuf[i] = 0x7fff;
-  }
-  for(; i < sizeof(testWaveBuf)/sizeof(uint16_t); i++)
-  {
-      testWaveBuf[i] = -0x7fff;
-  }
-  DRV_CS43L22_Init(44100, testWaveBuf, sizeof(testWaveBuf)/sizeof(uint16_t)); /* system_stm32f4xx.c内で設定したサンプリング周波数に一致させること! */
-
-  blink_led_init();
-
-  uint32_t seconds = 0;
-
-  // Infinite loop
-  while (1)
+    // Send a greeting to the trace device (skipped on Release).
+    trace_puts("Hello ARM World!");
+    
+    // At this stage the system clock should have already been configured
+    // at high speed.
+    trace_printf("System clock: %u Hz\n", SystemCoreClock);
+    
+    timer_start();
+    
+    
+    /* テストデータとしてとりあえず矩形波を合成 */
+    unsigned int i;
+    for(i = 0; i < sizeof(testWaveBuf)/sizeof(uint16_t)/2; i++)
     {
-      blink_led_on();
-      timer_sleep(seconds == 0 ? TIMER_FREQUENCY_HZ : BLINK_ON_TICKS);
-
-      blink_led_off();
-      timer_sleep(BLINK_OFF_TICKS);
-
-      ++seconds;
-      // Count seconds on the trace device.
-      //trace_printf("Second %u\n", seconds); /* これを有効にするとデバッグ終了時にCPUがHaltしたままになるので通常は無効化 */
+        testWaveBuf[i] = 0x7fff;
     }
-  // Infinite loop, never return.
+    for(; i < sizeof(testWaveBuf)/sizeof(uint16_t); i++)
+    {
+        testWaveBuf[i] = -0x7fff;
+    }
+    DRV_CS43L22_Init(44100, testWaveBuf, sizeof(testWaveBuf)/sizeof(uint16_t)); /* system_stm32f4xx.c内で設定したサンプリング周波数に一致させること! */
+    
+    blink_led_init();
+    
+    uint32_t seconds = 0;
+    
+    // Infinite loop
+    while (1)
+    {
+        blink_led_on();
+        timer_sleep(seconds == 0 ? TIMER_FREQUENCY_HZ : BLINK_ON_TICKS);
+    
+        blink_led_off();
+        timer_sleep(BLINK_OFF_TICKS);
+    
+        ++seconds;
+        
+        DRV_CS43L22_ExecuteI2cPeriodic(); /* I2C周期処理 */
+        
+        // Count seconds on the trace device.
+        //trace_printf("Second %u\n", seconds); /* これを有効にするとデバッグ終了時にCPUがHaltしたままになるので通常は無効化 */
+    }
+// Infinite loop, never return.
 }
 
 #pragma GCC diagnostic pop
