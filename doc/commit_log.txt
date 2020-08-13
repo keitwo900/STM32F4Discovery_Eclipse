@@ -8,6 +8,24 @@ keitwo
 ■変更ファイル
 
 ----------------------------------------------------------------------------------------------------
+・READMEファイル修正等
+
+■主な変更点
+・READMEファイルを修正しました。
+・Cortex-M4以外の関連ファイルを削除しました。
+
+■削除ファイル
+STM32F4DISCOVERY/lib/include/cmsis/core_cm0.h
+STM32F4DISCOVERY/lib/include/cmsis/core_cm0plus.h
+STM32F4DISCOVERY/lib/include/cmsis/core_cm3.h
+STM32F4DISCOVERY/lib/include/cmsis/core_cm7.h
+・Cortex-M4に関係ないので削除しました。
+
+■変更ファイル
+README.md
+・オーディオコーデック用ブランチの紹介を追加しました。
+
+----------------------------------------------------------------------------------------------------
 2020/06/15 keitwo 
 ・READMEファイル修正
 

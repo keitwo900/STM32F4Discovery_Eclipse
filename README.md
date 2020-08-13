@@ -16,6 +16,7 @@ Master Branch以外は、特定の機能のサンプルプログラムです。
 |ブランチ名|説明|
 |--|--|
 |[develop_cdc_dev](https://github.com/keitwo900/STM32F4Discovery_Eclipse/tree/develop_cdc_dev)|USB-CDCのサンプルプログラムです。|
+|[develop_i2c_i2s_dev](https://github.com/keitwo900/STM32F4Discovery_Eclipse/tree/develop_i2c_i2s_audio)|オーディオコーデックを制御するサンプルプログラムです。I2CとI2Sのドライバサンプルがあります。|
 
 <b>このリポジトリをそのまま使用可能にするためには、Windows 10 64bit環境で、以下の手順で開発環境を整える必要があります。</b>
 
