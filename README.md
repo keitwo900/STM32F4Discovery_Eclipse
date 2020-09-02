@@ -39,7 +39,7 @@ C:\
 └─ eclipse
    ├─ BuildTools
    |  ├─ bin
-   |  └─ gnu-ncu-eclipse
+   |  └─ gnu-mcu-eclipse
    |
    ├─ OpenOCD
    |  ├─ bin
@@ -75,9 +75,15 @@ C:\
 1. 「作業対象」に、「 http://gnuarmeclipse.sourceforge.net/updates 」と入力
 1. 入力すると、下に「GNU ARM C/C++ Cross Development Tools」と出てくるので、選択して「次へ」または「完了」をクリックながらインストールを進める。
 
-上記作業まで行うと、ビルドできるようになると思います。<br>
-ビルドエラーが出る場合は、Build Toolsへのパスが通っていない場合があるので、PCの環境変数に、BuildToolsへのパスを通してください。<br>
-(「用意するもの」項の通り環境を構築した場合は、「C:\eclipse\BuildTools」)
+## BuildTools、Toolchainパスの設定
+1. メニュー→プロジェクト→プロパティーをクリック
+1. C/C++ビルド→Tools Pathsを選択
+1. Build tools folder:の欄に、BuildToolsのbinフォルダパスを指定(上記「用意するもの」項の通り環境を構築した場合は、「C:\eclipse\BuildTools\bin」)
+1. Toolchain folder: の欄に、Toolchainのbinフォルダパスを指定(上記「用意するもの」項の通り環境を構築した場合は、「C:\eclipse\Toolchain\bin」)
+
+尚、パス指定は、PCの環境変数から指定してもOKです。
+
+上記作業まで行うと、ビルドできるようになると思います。
 
 ## ST-Linkドライバのインストール
 ST社のページから、ST-Linkのドライバを入手してインストールしてください。20/06/15時点では、リンクは以下です。(ダウンロードにはST社サイトのアカウント登録が必要)<br>
@@ -88,7 +94,7 @@ https://www.st.com/ja/development-tools/stsw-link009.html
 
 ## ビルド~デバッグ開始
 1. Eclipseのメニューの「プロジェクト」→「すべてビルド」をクリック
-1. STM32F4DISCOVERYのUSB-Mini B端子とPCをUSBケーブルでつなぐ(Windows 10なら、ドライバは不要なはず。PCからマスストレージに見えるが気にしない。)
+1. STM32F4DISCOVERYのUSB-Mini B端子とPCをUSBケーブルでつなぐ(PCからマスストレージに見えるが気にしない。)
 1. Eclipseのメニューの「実行」→「デバッグの構成」をクリック
 1. 左のGDB OpenOCD Debuggingのところだけプルダウンできるはずなので(「>」がある)、これをクリック
 1. 「>」の下に「STM32F4DISCOVERY Debug」があるので選択
