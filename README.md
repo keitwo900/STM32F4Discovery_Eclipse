@@ -29,6 +29,8 @@ https://github.com/gnu-mcu-eclipse/windows-build-tools/releases/v2.12-20190422/
 https://launchpad.net/gcc-arm-embedded/+download
 * OpenOCD 0.10.0-12.1
 https://github.com/ilg-archived/openocd/releases
+* GNU ARM Eclipse plug-ins v3.4.1.201704251808 https://github.com/eclipse-embed-cdt/eclipse-plugins/releases/tag/v3.4.1-201704251808 </br>
+  ilg.gnuarmeclipse.repository-3.4.1-201704251808.zip をダウンロード、展開しておく(展開場所は任意)
 
 ※1 バージョンが異なるものを使用する場合は自己責任で。<br>
 ※2 当然ですがSTM32F4Discoveryの基板も要ります。
@@ -71,9 +73,17 @@ C:\
 3~7は、Cloneして初めに一回行えば、次からは起動時にプロジェクトが読み込まれています。
 
 ## クロスコンパイル用プラグインのインストール
+<del>1. メニュー→ヘルプ→新規ソフトウェアのインストールをクリック</del>
+
+<del>1. 「作業対象」に、「 http://gnuarmeclipse.sourceforge.net/updates 」と入力</del>
+
+<del>1. 入力すると、下に「GNU ARM C/C++ Cross Development Tools」と出てくるので、選択して「次へ」または「完了」をクリックながらインストールを進める。</del> リンク先が消えたのでこの方法は使えなくなった。
+
 1. メニュー→ヘルプ→新規ソフトウェアのインストールをクリック
-1. 「作業対象」に、「 http://gnuarmeclipse.sourceforge.net/updates 」と入力
-1. 入力すると、下に「GNU ARM C/C++ Cross Development Tools」と出てくるので、選択して「次へ」または「完了」をクリックながらインストールを進める。
+1. 「作業対象」の右の「追加」をクリック
+1. 「ローカル」をクリック
+1. 先にダウンロードしたilg.gnuarmeclipse.repository-3.4.1-201704251808.zip を展開したフォルダを指定し、「追加」をクリック
+1. 「GNU ARM C/C++ Cross Development Tools」と出てくるので、チェックボックスを選択して「次へ」または「完了」をクリックしながらインストールを進める。
 
 ## BuildTools、Toolchainパスの設定
 1. メニュー→プロジェクト→プロパティーをクリック
